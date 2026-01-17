@@ -1,0 +1,167 @@
+let supabaseClient = null;
+
+// Inicializace a načtení dat při startu
+window.addEventListener('DOMContentLoaded', () => {
+    initSupabase();
+    loadIdeas();
+});
+
+function initSupabase() {
+    if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey) {
+        showStatus('Chyba: Není nakonfigurován Supabase. Zkontrolujte config.js', 'error');
+        return;
+    }
+
+    if (SUPABASE_CONFIG.url === 'YOUR_SUPABASE_URL' || SUPABASE_CONFIG.anonKey === 'YOUR_SUPABASE_ANON_KEY') {
+        showStatus('Prosím, nakonfigurujte Supabase údaje v souboru config.js', 'error');
+        return;
+    }
+
+    try {
+        supabaseClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+    } catch (error) {
+        showStatus(`Chyba při inicializaci: ${error.message}`, 'error');
+    }
+}
+
+function showStatus(message, type) {
+    const statusDiv = document.getElementById('status');
+    statusDiv.textContent = message;
+    statusDiv.className = type;
+    statusDiv.style.display = 'block';
+}
+
+function hideStatus() {
+    const statusDiv = document.getElementById('status');
+    statusDiv.style.display = 'none';
+}
+
+async function addIdea() {
+    if (!supabaseClient) {
+        showStatus('Chyba: Supabase není inicializován', 'error');
+        return;
+    }
+
+    const textarea = document.getElementById('newIdeaText');
+    const button = document.getElementById('addIdeaBtn');
+    const text = textarea.value.trim();
+
+    if (!text) {
+        showStatus('Prosím, napište nějaký nápad', 'error');
+        textarea.focus();
+        return;
+    }
+
+    // Zakázání tlačítka během odesílání
+    button.disabled = true;
+    button.textContent = '⏳ Přidávám...';
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('ideas')
+            .insert([
+                { text: text }
+            ])
+            .select();
+
+        if (error) {
+            throw error;
+        }
+
+        showStatus('✅ Nápad byl úspěšně přidán!', 'success');
+        textarea.value = ''; // Vyčistit pole
+
+        // Znovu načíst všechny nápady
+        await loadIdeas();
+
+        // Skrýt status po 3 sekundách
+        setTimeout(hideStatus, 3000);
+
+    } catch (error) {
+        showStatus(`Chyba při přidávání nápadu: ${error.message}`, 'error');
+        console.error('Chyba při přidávání nápadu:', error);
+    } finally {
+        button.disabled = false;
+        button.textContent = '➕ Přidat nápad';
+    }
+}
+
+async function loadIdeas() {
+    if (!supabaseClient) {
+        return;
+    }
+
+    const container = document.getElementById('ideasContainer');
+
+    try {
+        // Načtení nápadů z tabulky ideas, seřazeno od nejnovějších
+        const { data, error } = await supabaseClient
+            .from('ideas')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            throw error;
+        }
+
+        if (data && data.length > 0) {
+            hideStatus();
+            displayIdeas(data);
+        } else {
+            container.innerHTML = '<p class="loading-message">Zatím žádné nápady 💭</p>';
+        }
+
+    } catch (error) {
+        showStatus(`Chyba při načítání nápadů: ${error.message}`, 'error');
+        console.error('Chyba při načítání nápadů:', error);
+        container.innerHTML = '<p class="loading-message" style="color: #f8d7da;">Nepodařilo se načíst nápady</p>';
+    }
+}
+
+function displayIdeas(ideas) {
+    const container = document.getElementById('ideasContainer');
+
+    if (!ideas || ideas.length === 0) {
+        container.innerHTML = '<p class="loading-message">Zatím žádné nápady 💭</p>';
+        return;
+    }
+
+    let html = '';
+
+    ideas.forEach(idea => {
+        const date = new Date(idea.created_at);
+        const formattedDate = date.toLocaleDateString('cs-CZ', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        html += `
+            <div class="idea-card">
+                <div class="idea-text">${escapeHtml(idea.text)}</div>
+                <div class="idea-meta">
+                    <span class="idea-id">ID: ${idea.id}</span>
+                    <span class="idea-date">📅 ${formattedDate}</span>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+
+

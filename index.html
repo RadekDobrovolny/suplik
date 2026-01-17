@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Šuplík</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>💡 Šuplík</h1>
+
+    <div class="add-idea-section">
+        <textarea id="newIdeaText" placeholder="Napište svůj nápad..." rows="3"></textarea>
+        <button id="addIdeaBtn" onclick="addIdea()">➕ Přidat nápad</button>
+    </div>
+
+    <div id="status"></div>
+
+    <div id="ideasContainer" class="ideas-grid">
+        <p class="loading-message">Načítání nápadů...</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
