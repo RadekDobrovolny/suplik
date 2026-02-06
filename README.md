@@ -97,13 +97,4 @@ suplik/
 - PocketBase JS SDK
 - GitHub Pages + GitHub Actions
 - CSS Grid Layout
-
-## 🔄 Migrace ze Supabase
-
-Pokud migrujete ze Supabase:
-1. Exportujte data ze Supabase tabulky `ideas`
-2. Importujte do PocketBase kolekce `ideas`
-3. Přejmenujte pole `created_at` na `created` (PocketBase standard)
-4. Nahraďte Supabase JS knihovnu za PocketBase SDK v HTML
-5. Upravte `script.js` podle nové API (viz výše)
-6. Nastavte API Rules v PocketBase Admin UI
+- 
