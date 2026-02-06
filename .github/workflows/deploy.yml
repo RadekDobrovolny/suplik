@@ -20,17 +20,6 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Create config.js from secrets
-        run: |
-          cat > config.js << EOF
-          // Konfigurace Supabase připojení
-          // Tento soubor je generován automaticky při deploymentu
-          const SUPABASE_CONFIG = {
-              url: '${{ secrets.SUPABASE_URL }}',
-              anonKey: '${{ secrets.SUPABASE_ANON_KEY }}'
-          };
-          EOF
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -39,4 +28,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-

@@ -1,24 +1,24 @@
-let supabaseClient = null;
+let pbClient = null;
 
 // Inicializace a načtení dat při startu
 window.addEventListener('DOMContentLoaded', () => {
-    initSupabase();
+    initPocketBase();
     loadIdeas();
 });
 
-function initSupabase() {
-    if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey) {
-        showStatus('Chyba: Není nakonfigurován Supabase. Zkontrolujte config.js', 'error');
+function initPocketBase() {
+    if (!POCKETBASE_CONFIG.url) {
+        showStatus('Chyba: Není nakonfigurován PocketBase. Zkontrolujte config.js', 'error');
         return;
     }
 
-    if (SUPABASE_CONFIG.url === 'YOUR_SUPABASE_URL' || SUPABASE_CONFIG.anonKey === 'YOUR_SUPABASE_ANON_KEY') {
-        showStatus('Prosím, nakonfigurujte Supabase údaje v souboru config.js', 'error');
+    if (POCKETBASE_CONFIG.url === 'YOUR_POCKETBASE_URL') {
+        showStatus('Prosím, nakonfigurujte PocketBase URL v souboru config.js', 'error');
         return;
     }
 
     try {
-        supabaseClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        pbClient = new PocketBase(POCKETBASE_CONFIG.url);
     } catch (error) {
         showStatus(`Chyba při inicializaci: ${error.message}`, 'error');
     }
@@ -37,8 +37,8 @@ function hideStatus() {
 }
 
 async function addIdea() {
-    if (!supabaseClient) {
-        showStatus('Chyba: Supabase není inicializován', 'error');
+    if (!pbClient) {
+        showStatus('Chyba: PocketBase není inicializován', 'error');
         return;
     }
 
@@ -57,16 +57,9 @@ async function addIdea() {
     button.textContent = '⏳ Přidávám...';
 
     try {
-        const { data, error } = await supabaseClient
-            .from('ideas')
-            .insert([
-                { text: text }
-            ])
-            .select();
-
-        if (error) {
-            throw error;
-        }
+        const record = await pbClient.collection('ideas').create({
+            text: text
+        });
 
         showStatus('✅ Nápad byl úspěšně přidán!', 'success');
         textarea.value = ''; // Vyčistit pole
@@ -87,26 +80,21 @@ async function addIdea() {
 }
 
 async function loadIdeas() {
-    if (!supabaseClient) {
+    if (!pbClient) {
         return;
     }
 
     const container = document.getElementById('ideasContainer');
 
     try {
-        // Načtení nápadů z tabulky ideas, seřazeno od nejnovějších
-        const { data, error } = await supabaseClient
-            .from('ideas')
-            .select('*')
-            .order('created_at', { ascending: false });
+        // Načtení nápadů z kolekce ideas, seřazeno od nejnovějších
+        const records = await pbClient.collection('ideas').getFullList({
+            sort: '-created',
+        });
 
-        if (error) {
-            throw error;
-        }
-
-        if (data && data.length > 0) {
+        if (records && records.length > 0) {
             hideStatus();
-            displayIdeas(data);
+            displayIdeas(records);
         } else {
             container.innerHTML = '<p class="loading-message">Zatím žádné nápady 💭</p>';
         }
@@ -129,7 +117,7 @@ function displayIdeas(ideas) {
     let html = '';
 
     ideas.forEach(idea => {
-        const date = new Date(idea.created_at);
+        const date = new Date(idea.created);
         const formattedDate = date.toLocaleDateString('cs-CZ', {
             year: 'numeric',
             month: 'long',
@@ -162,6 +150,3 @@ function escapeHtml(text) {
     };
     return text.replace(/[&<>"']/g, m => map[m]);
 }
-
-
-
