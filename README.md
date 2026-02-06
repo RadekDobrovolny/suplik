@@ -97,4 +97,3 @@ suplik/
 - PocketBase JS SDK
 - GitHub Pages + GitHub Actions
 - CSS Grid Layout
-- 
