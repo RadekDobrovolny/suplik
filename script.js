@@ -114,30 +114,12 @@ function displayIdeas(ideas) {
         return;
     }
 
-    let html = '';
+    const orderedIdeas = [...ideas]
+        .sort((a, b) => new Date(b.created) - new Date(a.created));
 
-    ideas.forEach(idea => {
-        const date = new Date(idea.created);
-        const formattedDate = date.toLocaleDateString('cs-CZ', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-
-        html += `
-            <div class="idea-card">
-                <div class="idea-text">${escapeHtml(idea.text)}</div>
-                <div class="idea-meta">
-                    <span class="idea-id">ID: ${idea.id}</span>
-                    <span class="idea-date">📅 ${formattedDate}</span>
-                </div>
-            </div>
-        `;
-    });
-
-    container.innerHTML = html;
+    container.innerHTML = orderedIdeas
+        .map(idea => renderIdeaCard(idea, Boolean(idea.is_completed)))
+        .join('');
 }
 
 function escapeHtml(text) {
@@ -149,4 +131,66 @@ function escapeHtml(text) {
         "'": '&#039;'
     };
     return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function renderIdeaCard(idea, isCompleted) {
+    const createdDate = formatDate(idea.created);
+    const completedDate = formatDate(idea.completed_at);
+    const resultUrl = getSafeResultUrl(idea.result_url);
+    const tagName = resultUrl ? 'a' : 'article';
+    const cardClasses = `idea-card${isCompleted ? ' idea-card-completed' : ''}${resultUrl ? ' idea-card-link' : ''}`;
+    const linkAttributes = resultUrl ? ` href="${resultUrl}" target="_blank" rel="noopener noreferrer"` : '';
+    const completedMeta = isCompleted ? `
+        ${completedDate ? `<span class="idea-date">✅ Hotovo: ${completedDate}</span>` : ''}
+    ` : '';
+
+    return `
+        <${tagName} class="${cardClasses}"${linkAttributes}>
+            ${isCompleted ? '<div class="idea-stamp">HOTOVO</div>' : ''}
+            <div class="idea-text">${escapeHtml(idea.text)}</div>
+            <div class="idea-meta">
+                <span class="idea-id">ID: ${idea.id}</span>
+                <span class="idea-date">📅 Přidáno: ${createdDate}</span>
+                ${completedMeta}
+            </div>
+        </${tagName}>
+    `;
+}
+
+function formatDate(value) {
+    if (!value) {
+        return '';
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    return date.toLocaleDateString('cs-CZ', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function getSafeResultUrl(value) {
+    if (!value) {
+        return '';
+    }
+
+    try {
+        const url = new URL(value);
+
+        if (url.protocol === 'http:' || url.protocol === 'https:') {
+            return url.toString();
+        }
+    } catch (error) {
+        return '';
+    }
+
+    return '';
 }

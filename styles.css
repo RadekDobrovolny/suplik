@@ -107,7 +107,7 @@ h1 {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
-    padding: 20px 0;
+    padding: 20px 0 40px;
 }
 
 .idea-card {
@@ -120,11 +120,17 @@ h1 {
     min-height: 150px;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .idea-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 12px rgba(0,0,0,0.2);
+}
+
+.idea-card-completed {
+    background: linear-gradient(180deg, #fffdf6 0%, #fff7da 100%);
+    border: 1px solid rgba(180, 130, 20, 0.2);
 }
 
 .idea-text {
@@ -134,6 +140,8 @@ h1 {
     margin-bottom: 15px;
     flex-grow: 1;
     word-wrap: break-word;
+    position: relative;
+    z-index: 1;
 }
 
 .idea-meta {
@@ -142,6 +150,8 @@ h1 {
     border-top: 1px solid #eee;
     padding-top: 10px;
     margin-top: auto;
+    position: relative;
+    z-index: 1;
 }
 
 .idea-date {
@@ -149,9 +159,36 @@ h1 {
     margin-top: 5px;
 }
 
+.idea-card-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
 .idea-id {
     color: #aaa;
     font-family: monospace;
+}
+
+.idea-stamp {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 88%;
+    padding: 14px 0;
+    border: 6px solid #b62218;
+    border-radius: 14px;
+    color: #b62218;
+    font-size: 2.15em;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    text-align: center;
+    text-transform: uppercase;
+    transform: translate(-50%, -50%) rotate(-16deg);
+    opacity: 1;
+    box-shadow: 0 0 0 3px rgba(182, 34, 24, 0.24);
+    z-index: 3;
+    pointer-events: none;
 }
 
 /* Různé barevné akcenty pro karty */
@@ -177,6 +214,11 @@ h1 {
         grid-template-columns: 1fr;
     }
 
+    .idea-stamp {
+        width: 92%;
+        font-size: 1.65em;
+    }
+
     h1 {
         font-size: 2em;
     }
@@ -185,5 +227,3 @@ h1 {
         padding: 10px;
     }
 }
-
-
